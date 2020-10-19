@@ -1150,8 +1150,10 @@ class SpackSolverSetup(object):
             value = variant.value
             if isinstance(value, tuple):
                 for v in value:
+                    if v == 'any':
+                        continue
                     clauses.append(f.variant(spec.name, vname, v))
-            else:
+            elif value != 'any':
                 clauses.append(f.variant(spec.name, vname, variant.value))
 
         # compiler and compiler version
