@@ -30,6 +30,11 @@ class WrfHydro(Package):
     # set as flags in trunk/NDHMS/template/setEnvar.sh.
     # Override here.
     variant(
+        "with_calibration_pkgs",
+        default=False,
+        description="Installs Python and R modules needed for NWM calibration.",
+    )
+    variant(
         "hydro_d",
         default="0",
         values=("0", "1"),
@@ -69,6 +74,28 @@ class WrfHydro(Package):
     depends_on("netcdf-c~parallel-netcdf")
     depends_on("netcdf-fortran")
 
+    # Required packages for NOAA NWM Calibration Procedure 
+    depends_on("python@3.8.6", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r@3.5.1", type=('build', 'run'), when='+with_calibration_pkgs')
+
+    # Python modules
+    depends_on("py-netcdf4", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("py-pandas", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("py-numpy", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("py-psycopg2", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("py-psutil", type=('build', 'run'), when='+with_calibration_pkgs')
+
+    # R modules
+    depends_on("r-data-table", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r-ncdf4", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r-glue", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r-scales", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r-tibble", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r-ggplot2", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r-gridextra", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r-plyr", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r-hydrogof", type=('build', 'run'), when='+with_calibration_pkgs')
+
     def setup_environment(self, spack_env, run_env):
         nc_c_home = self.spec["netcdf-c"].prefix
         nc_f_home = self.spec["netcdf-fortran"].prefix
@@ -88,7 +115,9 @@ class WrfHydro(Package):
         try:
             configure_args = [compiler_config[self.spec.compiler.name]]
         except KeyError:
-            raise InstallError("Compiler not recognized nor supported.")
+            print(f"Compiler not recognized nor supported: \"{self.spec.compiler.name}\"")
+            configure_args = [compiler_config["gcc"]]
+            #raise InstallError("Compiler not recognized nor supported.")
 
         # Set up virtual setEnvar.sh file
         set_envar = [
@@ -116,3 +145,6 @@ class WrfHydro(Package):
         mkdir(prefix.bin)
         install(join_path("trunk", "NDHMS", "Run", "wrf_hydro.exe"), prefix.bin)
         install(join_path("trunk", "NDHMS", "Run", "wrf_hydro_NoahMP.exe"), prefix.bin)
+
+        # Handle additional R packages
+        Rscript -e "install.packages('hydroGOF', type = 'source', Ncpus = 4, repos = 'http://cran.us.r-project.org')"
