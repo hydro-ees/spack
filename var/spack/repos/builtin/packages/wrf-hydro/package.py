@@ -145,6 +145,3 @@ class WrfHydro(Package):
         mkdir(prefix.bin)
         install(join_path("trunk", "NDHMS", "Run", "wrf_hydro.exe"), prefix.bin)
         install(join_path("trunk", "NDHMS", "Run", "wrf_hydro_NoahMP.exe"), prefix.bin)
-
-        # Handle additional R packages
-        Rscript -e "install.packages('hydroGOF', type = 'source', Ncpus = 4, repos = 'http://cran.us.r-project.org')"
