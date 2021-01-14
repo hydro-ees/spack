@@ -74,27 +74,32 @@ class WrfHydro(Package):
     depends_on("netcdf-c~parallel-netcdf")
     depends_on("netcdf-fortran")
 
-    # Required packages for NOAA NWM Calibration Procedure 
-    depends_on("python@3.8.6", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("r@3.5.1", type=('build', 'run'), when='+with_calibration_pkgs')
+    # Required packages for NOAA NWM Calibration Procedure
+    RUNTIME_KWARGS = {
+        "type": ("build", "run"),
+        "when": "+with_calibration_pkgs",
+    }
+
+    depends_on("python@3.8.6", **RUNTIME_KWARGS)
+    depends_on("r@3.5.1", **RUNTIME_KWARGS)
 
     # Python modules
-    depends_on("py-netcdf4", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("py-pandas", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("py-numpy", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("py-psycopg2", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("py-psutil", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("py-netcdf4", **RUNTIME_KWARGS)
+    depends_on("py-pandas", **RUNTIME_KWARGS)
+    depends_on("py-numpy", **RUNTIME_KWARGS)
+    depends_on("py-psycopg2", **RUNTIME_KWARGS)
+    depends_on("py-psutil", **RUNTIME_KWARGS)
 
     # R modules
-    depends_on("r-data-table", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("r-ncdf4", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("r-glue", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("r-scales", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("r-tibble", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("r-ggplot2", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("r-gridextra", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("r-plyr", type=('build', 'run'), when='+with_calibration_pkgs')
-    depends_on("r-hydrogof", type=('build', 'run'), when='+with_calibration_pkgs')
+    depends_on("r-data-table", **RUNTIME_KWARGS)
+    depends_on("r-ncdf4", **RUNTIME_KWARGS)
+    depends_on("r-glue", **RUNTIME_KWARGS)
+    depends_on("r-scales", **RUNTIME_KWARGS)
+    depends_on("r-tibble", **RUNTIME_KWARGS)
+    depends_on("r-ggplot2", **RUNTIME_KWARGS)
+    depends_on("r-gridextra", **RUNTIME_KWARGS)
+    depends_on("r-plyr", **RUNTIME_KWARGS)
+    depends_on("r-hydrogof", **RUNTIME_KWARGS)
 
     def setup_environment(self, spack_env, run_env):
         nc_c_home = self.spec["netcdf-c"].prefix
@@ -115,9 +120,11 @@ class WrfHydro(Package):
         try:
             configure_args = [compiler_config[self.spec.compiler.name]]
         except KeyError:
-            print(f"Compiler not recognized nor supported: \"{self.spec.compiler.name}\"")
-            configure_args = [compiler_config["gcc"]]
-            #raise InstallError("Compiler not recognized nor supported.")
+            raise InstallError(
+                "Compiler not recognized nor supported: {}".format(
+                    self.spec.compiler.name
+                )
+            )
 
         # Set up virtual setEnvar.sh file
         set_envar = [
@@ -127,7 +134,8 @@ class WrfHydro(Package):
             "export SPATIAL_SOIL=" + spec.variants["spatial_soil"].value,
             "export WRF_HYDRO_RAPID=" + spec.variants["wrf_hydro_rapid"].value,
             "export NCEP_WCOSS=" + spec.variants["ncep_wcoss"].value,
-            "export WRF_HYDRO_NUDGING=" + spec.variants["wrf_hydro_nudging"].value,
+            "export WRF_HYDRO_NUDGING="
+            + spec.variants["wrf_hydro_nudging"].value,
         ]
 
         # Configure and build in trunk/NDHMS rather than root source
@@ -143,5 +151,10 @@ class WrfHydro(Package):
 
         # Install compiled binaries
         mkdir(prefix.bin)
-        install(join_path("trunk", "NDHMS", "Run", "wrf_hydro.exe"), prefix.bin)
-        install(join_path("trunk", "NDHMS", "Run", "wrf_hydro_NoahMP.exe"), prefix.bin)
+        install(
+            join_path("trunk", "NDHMS", "Run", "wrf_hydro.exe"), prefix.bin
+        )
+        install(
+            join_path("trunk", "NDHMS", "Run", "wrf_hydro_NoahMP.exe"),
+            prefix.bin,
+        )
