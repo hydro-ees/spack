@@ -95,8 +95,11 @@ class WrfHydro(Package):
     depends_on("r-ncdf4", **RUNTIME_KWARGS)
     depends_on("r-glue", **RUNTIME_KWARGS)
     depends_on("r-scales", **RUNTIME_KWARGS)
+    
+    depends_on("r-vctrs", **RUNTIME_KWARGS)
     depends_on("r-tibble", **RUNTIME_KWARGS)
     depends_on("r-ggplot2", **RUNTIME_KWARGS)
+
     depends_on("r-gridextra", **RUNTIME_KWARGS)
     depends_on("r-plyr", **RUNTIME_KWARGS)
     depends_on("r-hydrogof", **RUNTIME_KWARGS)
