@@ -20,7 +20,7 @@ class WrfHydro(Package):
     homepage = "https://ral.ucar.edu/projects/wrf_hydro/overview"
     git = "https://github.com/NCAR/wrf_hydro_nwm_public.git"
     maintainers = ['daniellivingston']
-    
+
     url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/v5.1.2.tar.gz"
 
     version("master", branch="master")
@@ -134,6 +134,9 @@ class WrfHydro(Package):
             configure(*configure_args)
             start_build = Executable("./compile_offline_NoahMP.sh")
 
+            with open("./macros", "a") as f_macros:
+                f_macros.write("F90FLAGS+=-g\n")
+
             with tempfile.NamedTemporaryFile(mode="w") as fp:
                 fp.write("\n".join(set_envar_sh))
                 fp.flush()
@@ -157,7 +160,7 @@ class WrfHydro(Package):
     @on_package_attributes(run_tests=True)
     def build_test(self):
         '''
-        Downloads and runs the Croton NY WRF-Hydro test case, 
+        Downloads and runs the Croton NY WRF-Hydro test case,
         as outlined in the "WRF-Hydro V5 Test Case User Guide" [0].
 
         [0]: https://ral.ucar.edu/sites/default/files/public/WRF-HydroV5TestCaseUserGuide_3.pdf
@@ -201,4 +204,3 @@ class WrfHydro(Package):
                    'Test cases failed!'
 
         tty.msg("WRF-Hydro test case passed")
-
