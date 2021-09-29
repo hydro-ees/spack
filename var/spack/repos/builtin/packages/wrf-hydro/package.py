@@ -21,12 +21,15 @@ class WrfHydro(Package):
     git = "https://github.com/NCAR/wrf_hydro_nwm_public.git"
     maintainers = ['daniellivingston']
 
-    url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/v5.1.2.tar.gz"
+    #url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/v5.1.2.tar.gz"
+    url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/refs/tags/v5.2.0-rc3.tar.gz"
 
     version("master", branch="master")
     version(
-        "5.1.2",
-        sha256="203043916c94c597dd4204033715d0b2dc7907e2168cbe3dfef3cd9eef950eb7",
+        "5.2.0",
+        sha256="85fd5bd2fc51a08cd8677c80718f4ee76bbd1eefb39db867e318cc4dd4ed11e0",
+        #"5.1.2",
+        #sha256="203043916c94c597dd4204033715d0b2dc7907e2168cbe3dfef3cd9eef950eb7",
     )
 
     # WRF-Hydro supports multiple build configs, ostensibly
@@ -71,6 +74,7 @@ class WrfHydro(Package):
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
+    
     # WRF-Hydro dependencies
     depends_on("autoconf")
     depends_on("automake")
@@ -134,6 +138,7 @@ class WrfHydro(Package):
             configure(*configure_args)
             start_build = Executable("./compile_offline_NoahMP.sh")
 
+            # NOTE: custom build flags can be entered here
             with open("./macros", "a") as f_macros:
                 f_macros.write("F90FLAGS+=-g\n")
 
@@ -166,6 +171,9 @@ class WrfHydro(Package):
         [0]: https://ral.ucar.edu/sites/default/files/public/WRF-HydroV5TestCaseUserGuide_3.pdf
         '''
         from glob import glob
+        
+        TESTCASE_URL = "https://github.com/NCAR/wrf_hydro_nwm_public/releases/download/v5.2.0-rc3/front_range_CO_example_testcase_coupled.tar.gz"
+        TESTCASE_URL = "https://github.com/NCAR/wrf_hydro_nwm_public/releases/download/v5.2.0-rc3/croton_NY_training_example_v5.2.tar.gz"
 
         check_test_success = lambda msg, infile: msg.lower() in open(infile,'r').read().lower()
 
@@ -174,7 +182,6 @@ class WrfHydro(Package):
         src_dir = os.getcwd()
 
         success_msg = "model finished successfully"
-        TESTCASE_URL = "https://github.com/NCAR/wrf_hydro_nwm_public/releases/download/v5.0.3/croton_NY_example_testcase.tar.gz"
         wget = which("wget")
         mpirun = which("mpirun") #self.spec['mpirun']
         tar = which("tar")
