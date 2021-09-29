@@ -26,7 +26,7 @@ class WrfHydro(Package):
 
     version("master", branch="master")
     version(
-        "5.2.0",
+        "5.2.0-rc3",
         sha256="85fd5bd2fc51a08cd8677c80718f4ee76bbd1eefb39db867e318cc4dd4ed11e0",
         #"5.1.2",
         #sha256="203043916c94c597dd4204033715d0b2dc7907e2168cbe3dfef3cd9eef950eb7",
