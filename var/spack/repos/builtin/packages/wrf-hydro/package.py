@@ -19,7 +19,7 @@ class WrfHydro(Package):
     # NCAR WRF-Hydro homepage and release tarball
     homepage = "https://ral.ucar.edu/projects/wrf_hydro/overview"
     git = "https://github.com/NCAR/wrf_hydro_nwm_public.git"
-    maintainers = ['daniellivingston']
+    maintainers = ['katrinaebennett', 'ryanlcrumley', 'daniellivingston']
 
     #url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/v5.1.2.tar.gz"
     url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/refs/tags/v5.2.0-rc3.tar.gz"
