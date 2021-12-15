@@ -12,15 +12,13 @@ import llnl.util.tty as tty
 
 
 class WrfHydro(Package):
-    """
-    WRF-Hydro is a community modeling system and framework
+    """WRF-Hydro is a community modeling system and framework
     for hydrologic modeling and model coupling.
     """
 
-    # NCAR WRF-Hydro homepage and release tarball
     homepage = "https://ral.ucar.edu/projects/wrf_hydro/overview"
     git = "https://github.com/NCAR/wrf_hydro_nwm_public.git"
-    url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/refs/tags/v{0}.tar.gz"
+    url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/refs/tags/v5.2.0.tar.gz"
 
     maintainers = ["katrinaebennett", "ryanlcrumley", "daniellivingston"]
 
@@ -29,55 +27,49 @@ class WrfHydro(Package):
         "5.2.0",
         sha256="7a3c95d52e1ef5681cc4c77f2c6a080dea6fd27c0e8b7ad30e205238062d9e87",
     )
-    version(
-        "5.2.0-rc3",
-        sha256="85fd5bd2fc51a08cd8677c80718f4ee76bbd1eefb39db867e318cc4dd4ed11e0",
-    )
+    # version('5.2.0-rc3', sha256='85fd5bd2fc51a08cd8677c80718f4ee76bbd1eefb39db867e318cc4dd4ed11e0')
     version(
         "5.1.2",
         sha256="203043916c94c597dd4204033715d0b2dc7907e2168cbe3dfef3cd9eef950eb7",
     )
+    version(
+        "5.0.0",
+        sha256="b2b25cee73c032d3cee5a718a692c7585eb4d6311027c4352cad2eecf07384b7",
+    )
 
     # WRF-Hydro supports multiple build configs, ostensibly
-    # set as flags in trunk/NDHMS/template/setEnvar.sh.
-    # Override here.
+    # set as flags in trunk/NDHMS/template/setEnvar.sh. Override here.
+    variant("debug", default=False, description="Builds in debug mode")
     variant(
         "hydro_d",
-        default="0",
-        values=("0", "1"),
-        description="Enhanced diagnostic output for debugging: 0=Off, 1=On.",
+        default=False,
+        description="Enable enhanced diagnostic output for debugging",
     )
     variant(
         "spatial_soil",
-        default="1",
-        values=("0", "1"),
-        description="Spatially distributed parameters for NoahMP: 0=Off, 1=On.",
+        default=True,
+        description="Enable spatially distributed parameters for NoahMP",
     )
     variant(
         "wrf_hydro_rapid",
-        default="0",
-        values=("0", "1"),
-        description="RAPID model: 0=Off, 1=On.",
+        default=False,
+        description="Enable RAPID model",
     )
     variant(
         "wrfio_ncd_large_file_support",
-        default="1",
-        values=("0", "1"),
-        description="Allow netCDF I/O of files larger than 2 GiB.",
+        default=True,
+        description="Allow netCDF I/O of files larger than 2 GiB",
     )
     variant(
         "ncep_wcoss",
-        default="0",
-        values=("0", "1"),
-        description="WCOSS file units: 0=Off, 1=On.",
+        default=False,
+        description="WCOSS file units",
     )
     variant(
         "wrf_hydro_nudging",
-        default="0",
-        values=("0", "1"),
-        description="Streamflow nudging: 0=Off, 1=On.",
+        default=False,
+        description="Enable streamflow nudging",
     )
-    variant("debug", default=False, description="Builds in debug mode.")
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
@@ -109,18 +101,26 @@ class WrfHydro(Package):
         tty.msg("NetCDF-C installed to: " + str(nc_c_home))
 
     def install(self, spec, prefix):
+        map_variant = lambda v: "1" if v else "0"
+        f90_flags = []
+
         # Initialize variables used in WRF-Hydro compilation
         wrf_envar = {
             "WRF_HYDRO": "1",
-            "HYDRO_D": spec.variants["hydro_d"].value,
-            "SPATIAL_SOIL": spec.variants["spatial_soil"].value,
-            "WRF_HYDRO_RAPID": spec.variants["wrf_hydro_rapid"].value,
-            "NCEP_WCOSS": spec.variants["ncep_wcoss"].value,
-            "WRFIO_NCD_LARGE_FILE_SUPPORT": spec.variants[
-                "wrfio_ncd_large_file_support"
-            ].value,
-            "WRF_HYDRO_NUDGING": spec.variants["wrf_hydro_nudging"].value,
+            "HYDRO_D": map_variant(self.spec.variants["hydro_d"].value),
+            "SPATIAL_SOIL": map_variant(self.spec.variants["spatial_soil"].value),
+            "WRF_HYDRO_RAPID": map_variant(self.spec.variants["wrf_hydro_rapid"].value),
+            "NCEP_WCOSS": map_variant(self.spec.variants["ncep_wcoss"].value),
+            "WRFIO_NCD_LARGE_FILE_SUPPORT": map_variant(
+                self.spec.variants["wrfio_ncd_large_file_support"].value
+            ),
+            "WRF_HYDRO_NUDGING": map_variant(
+                self.spec.variants["wrf_hydro_nudging"].value
+            ),
         }
+
+        if self.spec.variants["debug"].value:
+            f90_flags += ["-g"]
 
         # Set the compiler flag for ./configure based on active
         # compiler family
@@ -149,10 +149,10 @@ class WrfHydro(Package):
             configure(*configure_args)
             start_build = Executable("./compile_offline_NoahMP.sh")
 
-            if spec.variants["debug"].value == True:
-                # NOTE: custom build flags can be entered here
+            # Write out Fortran flags, if the f90_flags list isn't empty...
+            if len(f90_flags):
                 with open("./macros", "a") as f_macros:
-                    f_macros.write("F90FLAGS+=-g\n")
+                    f_macros.write("F90FLAGS+=%s\n" % (" ".join(f90_flags)))
 
             with tempfile.NamedTemporaryFile(mode="w") as fp:
                 fp.write("\n".join(set_envar_sh))
