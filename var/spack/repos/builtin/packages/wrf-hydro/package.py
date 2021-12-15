@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import tempfile
 import shutil
+import tempfile
 
 import llnl.util.tty as tty
 
