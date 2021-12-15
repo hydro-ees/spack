@@ -10,6 +10,7 @@ import tempfile
 import shutil
 import llnl.util.tty as tty
 
+
 class WrfHydro(Package):
     """
     WRF-Hydro is a community modeling system and framework
@@ -20,13 +21,22 @@ class WrfHydro(Package):
     homepage = "https://ral.ucar.edu/projects/wrf_hydro/overview"
     git = "https://github.com/NCAR/wrf_hydro_nwm_public.git"
     url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/refs/tags/v{0}.tar.gz"
-    
-    maintainers = ['katrinaebennett', 'ryanlcrumley', 'daniellivingston']
+
+    maintainers = ["katrinaebennett", "ryanlcrumley", "daniellivingston"]
 
     version("master", branch="master")
-    version('5.2.0', sha256="7a3c95d52e1ef5681cc4c77f2c6a080dea6fd27c0e8b7ad30e205238062d9e87")
-    version("5.2.0-rc3", sha256="85fd5bd2fc51a08cd8677c80718f4ee76bbd1eefb39db867e318cc4dd4ed11e0")
-    version("5.1.2", sha256="203043916c94c597dd4204033715d0b2dc7907e2168cbe3dfef3cd9eef950eb7")
+    version(
+        "5.2.0",
+        sha256="7a3c95d52e1ef5681cc4c77f2c6a080dea6fd27c0e8b7ad30e205238062d9e87",
+    )
+    version(
+        "5.2.0-rc3",
+        sha256="85fd5bd2fc51a08cd8677c80718f4ee76bbd1eefb39db867e318cc4dd4ed11e0",
+    )
+    version(
+        "5.1.2",
+        sha256="203043916c94c597dd4204033715d0b2dc7907e2168cbe3dfef3cd9eef950eb7",
+    )
 
     # WRF-Hydro supports multiple build configs, ostensibly
     # set as flags in trunk/NDHMS/template/setEnvar.sh.
@@ -67,15 +77,11 @@ class WrfHydro(Package):
         values=("0", "1"),
         description="Streamflow nudging: 0=Off, 1=On.",
     )
-    variant(
-        "debug",
-        default=False,
-        description="Builds in debug mode."
-    )
+    variant("debug", default=False, description="Builds in debug mode.")
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
-    
+
     # WRF-Hydro dependencies
     depends_on("autoconf")
     depends_on("automake")
@@ -110,7 +116,9 @@ class WrfHydro(Package):
             "SPATIAL_SOIL": spec.variants["spatial_soil"].value,
             "WRF_HYDRO_RAPID": spec.variants["wrf_hydro_rapid"].value,
             "NCEP_WCOSS": spec.variants["ncep_wcoss"].value,
-            "WRFIO_NCD_LARGE_FILE_SUPPORT": spec.variants["wrfio_ncd_large_file_support"].value,
+            "WRFIO_NCD_LARGE_FILE_SUPPORT": spec.variants[
+                "wrfio_ncd_large_file_support"
+            ].value,
             "WRF_HYDRO_NUDGING": spec.variants["wrf_hydro_nudging"].value,
         }
 
@@ -128,7 +136,9 @@ class WrfHydro(Package):
             )
 
         # Reconstruct the dict as a bash script
-        set_envar_sh = ["#!/bin/bash"] + ["export %s=%s" % (key, wrf_envar[key]) for key in wrf_envar.keys()]
+        set_envar_sh = ["#!/bin/bash"] + [
+            "export %s=%s" % (key, wrf_envar[key]) for key in wrf_envar.keys()
+        ]
 
         tty.msg("WRF-Hydro environment variables set to: ")
         tty.msg("\n".join(set_envar_sh))
@@ -152,9 +162,7 @@ class WrfHydro(Package):
         # Install compiled binaries
         mkdir(prefix.bin)
 
-        install(
-            join_path("trunk", "NDHMS", "Run", "wrf_hydro.exe"), prefix.bin
-        )
+        install(join_path("trunk", "NDHMS", "Run", "wrf_hydro.exe"), prefix.bin)
         install(
             join_path("trunk", "NDHMS", "Run", "wrf_hydro_NoahMP.exe"),
             prefix.bin,
@@ -163,21 +171,23 @@ class WrfHydro(Package):
         # Install the entire tree as many files are needed for running
         install_tree(".", prefix)
 
-    @run_after('install')
+    @run_after("install")
     @on_package_attributes(run_tests=True)
     def build_test(self):
-        '''
+        """
         Downloads and runs the Croton NY WRF-Hydro test case,
         as outlined in the "WRF-Hydro V5 Test Case User Guide" [0].
 
         [0]: https://ral.ucar.edu/sites/default/files/public/WRF-HydroV5TestCaseUserGuide_3.pdf
-        '''
+        """
         from glob import glob
-        
+
         TESTCASE_URL = "https://github.com/NCAR/wrf_hydro_nwm_public/releases/download/v5.2.0-rc3/front_range_CO_example_testcase_coupled.tar.gz"
         TESTCASE_URL = "https://github.com/NCAR/wrf_hydro_nwm_public/releases/download/v5.2.0-rc3/croton_NY_training_example_v5.2.tar.gz"
 
-        check_test_success = lambda msg, infile: msg.lower() in open(infile,'r').read().lower()
+        check_test_success = (
+            lambda msg, infile: msg.lower() in open(infile, "r").read().lower()
+        )
 
         mkdir(prefix.testing)
         test_dir = prefix.testing
@@ -185,7 +195,7 @@ class WrfHydro(Package):
 
         success_msg = "model finished successfully"
         wget = which("wget")
-        mpirun = which("mpirun") #self.spec['mpirun']
+        mpirun = which("mpirun")  # self.spec['mpirun']
         tar = which("tar")
 
         # Download and untar test case
@@ -200,7 +210,10 @@ class WrfHydro(Package):
                 tty.msg("Copying " + file)
                 shutil.copy(file, "Gridded/")
 
-            shutil.copy(join_path(prefix.bin, "wrf_hydro.exe"), join_path("Gridded", "wrf_hydro.exe"))
+            shutil.copy(
+                join_path(prefix.bin, "wrf_hydro.exe"),
+                join_path("Gridded", "wrf_hydro.exe"),
+            )
 
         with working_dir(join_path(test_dir, "example_case", "Gridded")):
             shutil.copytree("../FORCING/", "FORCING/")
@@ -208,8 +221,10 @@ class WrfHydro(Package):
             # Run test case
             mpirun("-np", "2", "./wrf_hydro.exe")
 
-            assert check_test_success(success_msg, "diag_hydro.00000") \
-                   and check_test_success(success_msg, "diag_hydro.00001"),\
-                   'Test cases failed!'
+            assert check_test_success(
+                success_msg, "diag_hydro.00000"
+            ) and check_test_success(
+                success_msg, "diag_hydro.00001"
+            ), "Test cases failed!"
 
         tty.msg("WRF-Hydro test case passed")
