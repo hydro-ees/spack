@@ -19,18 +19,14 @@ class WrfHydro(Package):
     # NCAR WRF-Hydro homepage and release tarball
     homepage = "https://ral.ucar.edu/projects/wrf_hydro/overview"
     git = "https://github.com/NCAR/wrf_hydro_nwm_public.git"
+    url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/refs/tags/v{0}.tar.gz"
+    
     maintainers = ['katrinaebennett', 'ryanlcrumley', 'daniellivingston']
 
-    #url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/v5.1.2.tar.gz"
-    url = "https://github.com/NCAR/wrf_hydro_nwm_public/archive/refs/tags/v5.2.0-rc3.tar.gz"
-
     version("master", branch="master")
-    version(
-        "5.2.0-rc3",
-        sha256="85fd5bd2fc51a08cd8677c80718f4ee76bbd1eefb39db867e318cc4dd4ed11e0",
-        #"5.1.2",
-        #sha256="203043916c94c597dd4204033715d0b2dc7907e2168cbe3dfef3cd9eef950eb7",
-    )
+    version('5.2.0', sha256="7a3c95d52e1ef5681cc4c77f2c6a080dea6fd27c0e8b7ad30e205238062d9e87")
+    version("5.2.0-rc3", sha256="85fd5bd2fc51a08cd8677c80718f4ee76bbd1eefb39db867e318cc4dd4ed11e0")
+    version("5.1.2", sha256="203043916c94c597dd4204033715d0b2dc7907e2168cbe3dfef3cd9eef950eb7")
 
     # WRF-Hydro supports multiple build configs, ostensibly
     # set as flags in trunk/NDHMS/template/setEnvar.sh.
@@ -70,6 +66,11 @@ class WrfHydro(Package):
         default="0",
         values=("0", "1"),
         description="Streamflow nudging: 0=Off, 1=On.",
+    )
+    variant(
+        "debug",
+        default=False,
+        description="Builds in debug mode."
     )
 
     depends_on("pkgconfig", type=("build"))
@@ -138,9 +139,10 @@ class WrfHydro(Package):
             configure(*configure_args)
             start_build = Executable("./compile_offline_NoahMP.sh")
 
-            # NOTE: custom build flags can be entered here
-            with open("./macros", "a") as f_macros:
-                f_macros.write("F90FLAGS+=-g\n")
+            if spec.variants["debug"].value == True:
+                # NOTE: custom build flags can be entered here
+                with open("./macros", "a") as f_macros:
+                    f_macros.write("F90FLAGS+=-g\n")
 
             with tempfile.NamedTemporaryFile(mode="w") as fp:
                 fp.write("\n".join(set_envar_sh))
